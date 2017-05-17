@@ -1,0 +1,664 @@
+.TH "rd\-acl" "" "April 6, 2015" "" ""
+.SS Name
+.PP
+rd\-acl \- Test and generate Rundeck ACL policy files.
+.SS Synopsis
+.PP
+\f[C]rd\-acl\ [*command*]\ [*command\ options*]...\f[]
+.SS Description
+.PP
+The rd\-acl command can test aclpolicy files to check whether they will
+allow a certain action request or not.
+.PP
+It can also list the results for all defined access tests for a user or
+group.
+.PP
+It can also generate the correct policy for a certain action.
+This can be done in a semi\-interactive mode by specifying each Common
+Option (#common-options) in turn, allowing it to prompt you with a set
+of next possible options.
+.PP
+It can also take as input the output from the Rundeck AUDIT log, and
+generate ACL policy definitions to allow any disallowed actions.
+.PP
+It can also validate one or more files.
+.PP
+The tool works in these \f[I]COMMAND\f[] modes:
+.TP
+.B \f[C]test\f[]
+test one or more aclpolicy files to determine if an action would be
+allowed.
+.RS
+.RE
+.TP
+.B \f[C]list\f[]
+list all access tests for a user or group for one or more aclpolicy
+files.
+.RS
+.RE
+.TP
+.B \f[C]create\f[]
+generate the correct ACL policy YAML definition for a specific action,
+or to allow a previously rejected action as logged in the Rundeck AUDIT
+log.
+.RS
+.RE
+.TP
+.B \f[C]validate\f[]
+Validate a file or directory of files, and print messages about problems
+with the files.
+.RS
+.RE
+.SS Related
+.PP
+See:
+.IP \[bu] 2
+ACL Policy syntax (../man5/aclpolicy.html)
+.IP \[bu] 2
+Access Control Policy (../administration/access-control-policy.html)
+.SS Options
+.TP
+.B \f[C]\-h,\ \-\-help\f[]
+Print usage message.
+.RS
+.RE
+.TP
+.B \f[C]\-v,\ \-\-verbose\f[]
+Run verbosely.
+.RS
+.RE
+.SS Test and Validate Command Options
+.PP
+The \f[C]test\f[] and \f[C]validate\f[] commands take these input
+options.
+.TP
+.B \f[C]\-d,\ \-\-dir\ <dir>\f[]
+Directory.
+Load all policy files in the specified directory.
+.RS
+.RE
+.TP
+.B \f[C]\-f,\ \-\-file\ <file>\f[]
+File path.
+Load the specified aclpolicy file.
+.RS
+.RE
+.TP
+.B \f[C]\-v\f[]
+If the tested action is not allowed, print the necessary ACL policy to
+allow it (as per the \f[C]create\f[] action.)
+.RS
+.RE
+.PP
+One of \f[C]\-\-dir\f[] or \f[C]\-\-file\f[] is required for the
+\f[C]test\f[] command.
+If the rdeck.base system property is defined, then the Rundeck "etc" dir
+will be used as for the \f[C]\-\-dir\f[] option by default.
+.PP
+In addition, the \f[C]test\f[] command also takes the Common
+Options (#common-options) and these options:
+.TP
+.B \f[C]\-V,\ \-\-validate\f[]
+Validate all input files, and exit with non\-zero exit code if
+validation fails.
+(\f[C]test\f[] and \f[C]list\f[] actions.)
+.RS
+.RE
+.SS Create Command Options
+.PP
+In addition to the Common Options (#common-options), the \f[C]create\f[]
+command takes these input options.
+.TP
+.B \f[C]\-i,\ \-\-input\ <file\ |\ \->\f[]
+Parse the Rundeck AUDIT log input, and for any REJECTED decisions,
+generate the appropriate aclpolicy to allow the action.
+If the value of the \f[C]\-\-input\f[] option is \f[C]\-\f[] (dash
+character), then the STDIN is read.
+If \f[C]\-\-input\f[] is used, then the Common Options are ignored.
+.RS
+.RE
+.TP
+.B \f[C]\-r,\ \-\-regex\f[]
+Match the resource using regular expressions.
+(create command).
+.RS
+.RE
+.SS Common Options
+.PP
+These options define the Context, Subject, Action, and Resource, which
+are used both to define an Access Request (for the \f[C]test\f[]
+command), and to define a rule in the ACL Policy (for the
+\f[C]create\f[] command).
+.PP
+\f[B]Context options:\f[]
+.TP
+.B \f[C]\-c,\-\-context\ <application\ |\ project>\f[]
+Context: either \[aq]project\[aq] or \[aq]application\[aq].
+For project context, the \f[C]\-p,\-\-project\f[] option is required.
+.RS
+.RE
+.PP
+\f[B]Subject options:\f[]
+.TP
+.B \f[C]\-g,\-\-groups\ <group,...>\f[]
+Subject Groups names.
+Comma\-separated list of user groups to validate (test command) or for
+by: clause (create command).
+.RS
+.RE
+.TP
+.B \f[C]\-u,\-\-user\ <user,...>\f[]
+Subject User name.
+Comma\-separated list of user names to validate (test command) or for
+by: clause (create command).
+.RS
+.RE
+.PP
+\f[B]Action options:\f[]
+.TP
+.B \f[C]\-a,\-\-allow\ <action,...>\f[]
+Actions to test are allowed (test command) or to allow (create command).
+.RS
+.RE
+.TP
+.B \f[C]\-D,\-\-deny\ <action,...>\f[]
+Actions to test are denied (test command) or to deny (create command).
+.RS
+.RE
+.PP
+\f[B]Resource Options:\f[]
+.PP
+Resources are characterized as either "specific resources", or "resource
+types" (see Specific Resources and Resource
+Types (../administration/access-control-policy.html#specific-resources-and-resource-types)).
+You can specify "resource types" using the
+\f[C]\-G,\ \-\-generic\ <kind>\f[] option.
+All specific resources can be specified directly using one of the
+options, or by type using \f[C]\-R,\ \-\-resource\ <type>\f[] in
+combination with \f[C]\-b,\ \-\-attributes\ <attr=val\ ...>\f[].
+.TP
+.B \f[C]\-G,\-\-generic\ <kind>\f[]
+Generic resource kind.
+.RS
+.RE
+.TP
+.B \f[C]\-R,\-\-resource\ <type>\f[]
+Resource type name.
+.RS
+.RE
+.TP
+.B \f[C]\-b,\-\-attributes\ <key=value\ ...>\f[]
+Attributes for the resource.
+A sequence of key=value pairs, multiple pairs can follow with a space.
+Use a value of \[aq]?\[aq] to see suggestions.
+.RS
+.RE
+.PP
+The following define Project scope
+resources (../administration/access-control-policy.html#project-scope-resources-and-actions):
+.TP
+.B \f[C]\-A,\-\-adhoc\f[]
+Adhoc execution (project context)
+.RS
+.RE
+.TP
+.B \f[C]\-j,\-\-job\ <group/name>\f[]
+Job group/name.
+(project context)
+.RS
+.RE
+.TP
+.B \f[C]\-n,\-\-node\ <nodename>\f[]
+Node name.
+(project context)
+.RS
+.RE
+.TP
+.B \f[C]\-t,\-\-tags\ <tag,..>\f[]
+Node tags.
+If specified, the resource match will be defined using
+\[aq]contains\[aq].
+(project context)
+.RS
+.RE
+.PP
+The following define Application scope
+resources (../administration/access-control-policy.html#application-scope-resources-and-actions):
+.TP
+.B \f[C]\-s,\-\-storage\ <path/file>\f[]
+Storage path/name.
+(application context)
+.RS
+.RE
+.TP
+.B \f[C]\-p,\-\-project\ <project>\f[]
+Name of project, used in project context or for application resource.
+.RS
+.RE
+.SS List Command Options
+.PP
+The \f[C]list\f[] command uses these Test Comand
+Options (#test-command-options) to set the aclpolicy files to be
+evaluated: \f[C]\-f,\-\-file\f[] and \f[C]\-d,\-\-dir\f[].
+.PP
+It also allows these options from the Common Options (#common-options):
+.PP
+The Subject options: \f[C]\-g,\-\-groups\f[] and \f[C]\-u,\-\-user\f[]
+.PP
+These Resource options:
+.IP \[bu] 2
+\f[C]\-p,\-\-project\f[] name of a project to test
+.IP \[bu] 2
+\f[C]\-s,\-\-storage\f[] Storage path/name
+.IP \[bu] 2
+\f[C]\-n,\-\-node\f[] or \f[C]\-t,\-\-tags\f[] name or tags of a node to
+tests
+.IP \[bu] 2
+\f[C]\-j,\-\-job\f[] Job group/name.
+.SS Test Command
+.PP
+The Test command loads the specified aclpolicy file or directory of
+files, and evaluates the Access Request defined by the Common
+Options (#common-options), and emits the decision of whether the request
+is allowed, disallowed, or denied.
+If it is allowed, then \f[C]rd\-acl\f[] will exit with a 0 exit code,
+otherwise it will exit with 2 exit code.
+.PP
+If the \f[C]\-v,\ \-\-verbose\f[] flag is enabled, and the decision was
+not "allowed", then it will additionally automatically invoke the Create
+Command (#create-command) to generate an aclpolicy definition to allow
+the requested action.
+.PP
+\f[B]Note:\f[] If the decision was "denied", then that indicates a
+specific DENY rule matches the Access Request.
+A DENY rule that matches will override all ALLOW rules that match.
+.PP
+\f[I]Examples\f[]
+.PP
+Test all aclpolicy files in the Rundeck "etc" directory by default, with
+an allowed result for \f[C]read\f[] action:
+.IP
+.nf
+\f[C]
+rd\-acl\ test\ \-\-context\ application\ \-\-groups\ test\ \-\-storage\ keys/test1.pem\ \-\-allow\ read
+Using\ configured\ Rundeck\ etc\ dir:\ /etc/rundeck
+The\ result\ was:\ allowed
+\f[]
+.fi
+.PP
+Test all aclpolicy files in the Rundeck "etc" directory by default, with
+a rejected result for \f[C]create\f[] action:
+.IP
+.nf
+\f[C]
+rd\-acl\ test\ \-\-context\ application\ \-\-groups\ test\ \-\-storage\ keys/key1.pem\ \-\-allow\ create
+Using\ configured\ Rundeck\ etc\ dir:\ /etc/rundeck
+Result:\ REJECTED
+The\ result\ was:\ not\ allowed
+\f[]
+.fi
+.PP
+The same as above, using the \f[C]\-\-verbose\f[] flag
+.IP
+.nf
+\f[C]
+rd\-acl\ test\ \-\-context\ application\ \-\-groups\ test\ \-\-storage\ keys/key1.pem\ \-\-allow\ create\ \-v
+Using\ configured\ Rundeck\ etc\ dir:\ /etc/rundeck
+Result:\ REJECTED
+Decision\ for:\ res<name:key1.pem,\ path:keys,\ type:storage>\ subject<Username:user\ Group:test>\ action<create>\ env<http://dtolabs.com/rundeck/env/application:rundeck>:\ authorized:\ false:\ REJECTED,\ reason:\ REJECTED,\ evaluations:\ None
+The\ result\ was:\ not\ allowed
+Policies\ to\ allow\ the\ requested\ actions:
+##\ create\ or\ append\ this\ to\ a\ .aclpolicy\ file
+\-\-\-
+for:
+\ \ storage:
+\ \ \-\ allow:\ create
+\ \ \ \ equals:
+\ \ \ \ \ \ name:\ key1.pem
+\ \ \ \ \ \ path:\ keys
+description:\ generated
+context:
+\ \ application:\ rundeck
+by:
+\ \ group:\ test
+\f[]
+.fi
+.SS List Command
+.PP
+The List command loads the specified aclpolicy file or directory of
+files, and evaluates all access requests possible for the specified
+Group or User.
+It lists the decision of whether each request is allowed, disallowed, or
+denied.
+.PP
+Further evaluations can be done by supplying some concrete values to
+identify a Project, Nodes, Jobs, and a Storage path.
+.PP
+If the \f[C]\-v,\ \-\-verbose\f[] flag is enabled, and the decision was
+"denied", then it will print the decision details including the file
+name of the policy rule that denies the request.
+.PP
+In the output, a line starting with \f[C]\-\f[] indicates the action was
+rejected, \f[C]+\f[] indicates the action was allowed, and \f[C]!\f[]
+indicates the action was denied.
+.PP
+The evaluation lines are in the form:
+.IP
+.nf
+\f[C]
+<result>\ <action>:\ <resource>\ [<reason>]
+\f[]
+.fi
+.PP
+\f[I]Examples\f[]
+.PP
+List results for just a group name:
+.IP
+.nf
+\f[C]
+rd\-acl\ list\ \-g\ api_token_group
+Using\ configured\ Rundeck\ etc\ dir:\ /etc/rundeck
+#\ Application\ Context\ access\ for\ group\ api_token_group
+
+
+(No\ project\ (\-p)\ specified,\ skipping\ Application\ context\ actions\ for\ a\ specific\ project.)
+
+
+(No\ storage\ path\ (\-s)\ specified,\ skipping\ Application\ context\ actions\ for\ a\ specific\ storage\ path.)
+
+\-\ create:\ project\ [REJECTED]
++\ read:\ system
+\-\ admin:\ job\ [REJECTED]
+\-\ admin:\ user\ [REJECTED]
+
+(No\ project\ (\-p)\ specified,\ skipping\ Project\ context\ listing.)
+\f[]
+.fi
+.PP
+Add a \f[C]\-p\f[] to specify a project:
+.IP
+.nf
+\f[C]
+rd\-acl\ list\ \ \-g\ api_token_group\ \-p\ test
+Using\ configured\ Rundeck\ etc\ dir:\ /etc/rundeck
+#\ Application\ Context\ access\ for\ group\ api_token_group
+
+\-\ admin:\ project\ named\ "test"\ [REJECTED]
+\-\ delete_execution:\ project\ named\ "test"\ [REJECTED]
+\-\ import:\ project\ named\ "test"\ [REJECTED]
++\ read:\ project\ named\ "test"
+\-\ export:\ project\ named\ "test"\ [REJECTED]
+\-\ configure:\ project\ named\ "test"\ [REJECTED]
+\-\ delete:\ project\ named\ "test"\ [REJECTED]
+
+(No\ storage\ path\ (\-s)\ specified,\ skipping\ Application\ context\ actions\ for\ a\ specific\ storage\ path.)
+
+\-\ create:\ project\ [REJECTED]
++\ read:\ system
+\-\ admin:\ job\ [REJECTED]
+\-\ admin:\ user\ [REJECTED]
+
+#\ Project\ "test"\ access\ for\ group\ api_token_group
+
+\-\ runAs:\ Adhoc\ executions\ [REJECTED]
++\ kill:\ Adhoc\ executions
++\ run:\ Adhoc\ executions
++\ read:\ Adhoc\ executions
+\-\ killAs:\ Adhoc\ executions\ [REJECTED]
+
+(No\ job\ (\-j)\ specified,\ skipping\ Project\ context\ actions\ for\ a\ specific\ job.)
+
+
+(No\ node\ (\-n)\ or\ tags\ (\-t)\ specified,\ skipping\ Project\ context\ actions\ for\ a\ specific\ node\ or\ node\ tags.)
+
++\ read:\ node
++\ refresh:\ node
++\ create:\ node
++\ update:\ node
++\ create:\ event
++\ read:\ event
++\ create:\ job
++\ delete:\ job
+\f[]
+.fi
+.PP
+Include \f[C]\-j\f[], \f[C]\-n\f[] and \f[C]\-s\f[]:
+.IP
+.nf
+\f[C]
+rd\-acl\ list\ \ \-g\ api_token_group\ \-p\ test\ \-s\ keys/boingo.pem\ \-j\ test/job\ \-n\ mynode
+Using\ configured\ Rundeck\ etc\ dir:\ /etc/rundeck
+#\ Application\ Context\ access\ for\ group\ api_token_group
+
+\-\ configure:\ project\ named\ "test"\ [REJECTED]
+\-\ import:\ project\ named\ "test"\ [REJECTED]
+\-\ export:\ project\ named\ "test"\ [REJECTED]
+\-\ delete:\ project\ named\ "test"\ [REJECTED]
+\-\ delete_execution:\ project\ named\ "test"\ [REJECTED]
++\ read:\ project\ named\ "test"
+\-\ admin:\ project\ named\ "test"\ [REJECTED]
++\ read:\ storage\ path\ "keys/boingo.pem"
++\ update:\ storage\ path\ "keys/boingo.pem"
+!\ delete:\ storage\ path\ "keys/boingo.pem"\ [REJECTED_DENIED]
++\ create:\ storage\ path\ "keys/boingo.pem"
+\-\ create:\ project\ [REJECTED]
++\ read:\ system
+\-\ admin:\ job\ [REJECTED]
+\-\ admin:\ user\ [REJECTED]
+
+#\ Project\ "test"\ access\ for\ group\ api_token_group
+
+\-\ runAs:\ Adhoc\ executions\ [REJECTED]
+\-\ killAs:\ Adhoc\ executions\ [REJECTED]
++\ kill:\ Adhoc\ executions
++\ run:\ Adhoc\ executions
++\ read:\ Adhoc\ executions
++\ run:\ Job\ "test/job"
+\-\ runAs:\ Job\ "test/job"\ [REJECTED]
++\ create:\ Job\ "test/job"
++\ read:\ Job\ "test/job"
++\ delete:\ Job\ "test/job"
++\ update:\ Job\ "test/job"
+\-\ killAs:\ Job\ "test/job"\ [REJECTED]
++\ kill:\ Job\ "test/job"
++\ read:\ Node\ "mynode"
++\ run:\ Node\ "mynode"
++\ update:\ node
++\ refresh:\ node
++\ read:\ node
++\ create:\ node
++\ create:\ event
++\ read:\ event
++\ delete:\ job
++\ create:\ job
+\f[]
+.fi
+.PP
+Using the \f[C]\-v\f[] verbose flag shows more detail about the
+REJECTED_DENIED result:
+.IP
+.nf
+\f[C]
+rd\-acl\ list\ \ \-g\ api_token_group\ \-p\ test\ \-s\ keys/boingo.pem\ \-v
+Using\ configured\ Rundeck\ etc\ dir:\ /etc/rundeck
+#\ Application\ Context\ access\ for\ group\ api_token_group
+
+\&...snip
+!\ delete:\ storage\ path\ "keys/boingo.pem"\ [REJECTED_DENIED]
+\ \ REJECTED,\ reason:\ REJECTED_DENIED,\ evaluations:\ \ \ /etc/rundeck/apitoken.aclpolicy[2][rule:\ 1:\ {match={path=(keys|keys/.*)},\ allow=*,\ deny=delete}]\ for\ actions:\ [delete]\ =>\ REJECTED_DENIED
+\&...snip
+\f[]
+.fi
+.SS Create Command
+.PP
+The Create Command can generate ACL Policy YAML definitions based on the
+Common Options (#common-options).
+It can also parse the output from an authorization evaluation, as logged
+in the Rundeck AUDIT log, and generate the policy necessary to allow any
+REJECTED evaluations.
+In the case of DENIED evaluations, it will still generate a policy to
+allow the access request, but note that the DENY rule would need to be
+removed to actually allow the specified action.
+.PP
+Create has a "semi\-interactive" behavior.
+If you enter only some components of the Subject, Context, Action and
+Resource necessary to define a rule, then it will prompt with some
+possible values for the next component.
+.PP
+\f[I]Examples\f[]
+.PP
+Begin by typing the \f[C]create\f[] command with no options
+.IP
+.nf
+\f[C]
+rd\-acl\ create\ 
+\-c/\-\-context\ is\ required.
+Choose\ one\ of:\ 
+\ \ \-c\ application
+\ \ \ \ Access\ to\ projects,\ users,\ storage,\ system\ info.
+\ \ \-c\ project
+\ \ \ \ Access\ to\ jobs,\ nodes,\ events,\ within\ a\ project.
+\f[]
+.fi
+.PP
+Add a \f[C]\-c\ project\f[] option:
+.IP
+.nf
+\f[C]
+rd\-acl\ create\ \-c\ project
+\-p/\-\-project\ is\ required.
+Choose\ the\ name\ of\ a\ project,\ or\ .*:\ 
+\ \ \-p\ myproject
+\ \ \-p\ \[aq].*\[aq]
+\f[]
+.fi
+.PP
+Add a \f[C]\-p\f[] option:
+.IP
+.nf
+\f[C]
+rd\-acl\ create\ \-c\ project\ \-p\ \[aq].*\[aq]
+\-g/\-\-groups\ <group,...>\ or\ \-u/\-\-user\ <user,...>\ are\ required
+\ \ \-u\ user1,user2...\ 
+\ \ \-g\ group1,group2...\ 
+\ \ \ \ Groups\ control\ access\ for\ a\ set\ of\ users,\ and\ correspond
+\ \ \ \ to\ authorization\ roles.
+\f[]
+.fi
+.PP
+Add a \f[C]\-g\f[] option:
+.IP
+.nf
+\f[C]
+rd\-acl\ create\ \-c\ project\ \-p\ \[aq].*\[aq]\ \-g\ test
+Project\-context\ resource\ option\ is\ required.
+Possible\ options:
+\ \ Job:\ \-j/\-\-job\ <group/name>
+\ \ \ \ View,\ modify,\ create*,\ delete*,\ run,\ and\ kill\ specific\ jobs.
+\ \ \ \ *\ Create\ and\ delete\ also\ require\ additional\ \-G/\-\-generic\ <kind>\ level\ access.
+\ \ Adhoc:\ \-A/\-\-adhoc
+\ \ \ \ View,\ run,\ and\ kill\ adhoc\ commands.
+\ \ Node:\ \-n/\-\-node\ <nodename>
+\ \ \ \ \ \ :\ \-t/\-\-tags\ <tag,..>
+\ \ \ \ View\ and\ run\ on\ specific\ nodes\ by\ name\ or\ tag.
+\ \ Resource:\ \-R/\-\-resource\ <type>
+\ \ \ \ Specify\ the\ resource\ type\ directly.\ \-b/\-\-attributes\ <key=value\ ...>\ should\ also\ be\ used.
+\ \ \ \ resource\ types\ in\ this\ context:\ 
+\ \ \ \ node
+\ \ \ \ job
+\ \ \ \ adhoc
+\ \ Generic:\ \-G/\-\-generic\ <kind>
+\ \ \ \ Create\ and\ delete\ jobs.
+\ \ \ \ View\ and\ manage\ nodes.
+\ \ \ \ View\ events.
+\ \ \ \ generic\ kinds\ in\ this\ context:\ 
+\ \ \ \ node
+\ \ \ \ event
+\ \ \ \ job
+\f[]
+.fi
+.PP
+Here we see several options to specify the resource.
+the \f[C]Job\f[], \f[C]Adhoc\f[] and \f[C]Node\f[] options define both
+the resource type, and some resource attributes.
+The \f[C]\-R\f[] option can set the resource type directly, and then the
+\f[C]\-b\f[] attributes option can be used to define the attributes.
+.PD 0
+.P
+.PD
+Otherwise the \f[C]\-G\f[] option can be used to match a resource kind.
+.PP
+We will specify node tags using \f[C]\-t\f[]:
+.IP
+.nf
+\f[C]
+rd\-acl\ create\ \-c\ project\ \-p\ \[aq].*\[aq]\ \-g\ test\ \-t\ prod,www
+\-a/\-\-allow\ or\ \-D/\-\-deny\ is\ required.
+\ \ \-a\ action1,action2,...
+\ \ \-D\ action1,action2,...
+Possible\ actions\ in\ this\ context:\ 
+\ \ *
+\ \ read
+\ \ run
+\f[]
+.fi
+.PP
+Now we are prompted to choose actions to allow or deny for the rule, and
+the ACL policy definition is printed.
+.IP
+.nf
+\f[C]
+rd\-acl\ create\ \-c\ project\ \-p\ \[aq].*\[aq]\ \-g\ test\ \-t\ prod,www\ \-a\ read\ \-D\ run
+##\ create\ or\ append\ this\ to\ a\ .aclpolicy\ file
+\-\-\-
+for:
+\ \ node:
+\ \ \-\ allow:\ read
+\ \ \ \ deny:\ run
+\ \ \ \ contains:
+\ \ \ \ \ \ tags:
+\ \ \ \ \ \ \-\ prod
+\ \ \ \ \ \ \-\ www
+description:\ generated
+context:
+\ \ project:\ .*
+by:
+\ \ group:\ test
+\f[]
+.fi
+.SS Validate Command
+.PP
+The Validate command loads the specified aclpolicy file or directory of
+files, and validates the aclpolicy definitions.
+It prints any errors found and it will exit with a 0 exit code if no
+errors are found, otherwise it will exit with 2 exit code.
+.PP
+\f[I]Examples\f[]
+.PP
+Validate all aclpolicy files in the Rundeck "etc" directory by default:
+.IP
+.nf
+\f[C]
+$\ rd\-acl\ validate
+Using\ configured\ Rundeck\ etc\ dir:\ /etc/rundeck
+The\ validation\ passed
+\f[]
+.fi
+.PP
+Validate a specific file:
+.IP
+.nf
+\f[C]
+$\ rd\-acl\ validate\ \-f\ bad5.aclpolicy
+/Users/greg/rundeck25/bad5.aclpolicy[1]:
+\ \ Context\ section\ is\ not\ valid:\ {xproject=asdf},\ it\ should\ contain\ only\ \[aq]application:\[aq]\ or\ \[aq]project:\[aq]
+The\ validation\ failed
+\f[]
+.fi
+.SS See Also
+.PP
+\f[C]aclpolicy\f[] (../man5/aclpolicy.html)
+.PP
+Access Control Policy (../administration/access-control-policy.html)
+.SH AUTHORS
+Greg Schueler; Alex Honor.

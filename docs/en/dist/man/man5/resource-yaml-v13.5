@@ -1,0 +1,198 @@
+.TH "RESOURCE\-YAML" "" "February 25, 2011" "" ""
+.SH NAME
+.PP
+resource\-yaml\-v13 \- describes the Rundeck resource model document
+Yaml format
+.PP
+The \f[C]resource\f[] YAML document declares a resource model used by a
+Rundeck Project to define the set of Nodes that are available.
+.PP
+See <http://yaml.org> for more information about YAML.
+.SS Structure
+.PP
+The resource format supports two structures: either a Yaml Sequence of
+Node definitions (#node-definition), or a Yaml Map of node names with
+Node definitions (#node-definition) as values.
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\-\ somenode:\ ...
+\ \ ...
+\-\ somenode2:\ ...
+\f[]
+.fi
+.PP
+OR
+.IP
+.nf
+\f[C]
+somenode:
+\ \ \ hostname:\ ...
+\ \ \ ...
+somenode2:
+\ \ \ hostname:\ ...
+\f[]
+.fi
+.PP
+In the second case, the \f[C]nodename\f[] entry is not required.
+.SS Node Definition
+.PP
+A Node definition consists of a Map with some required and some optional
+entries.
+.PP
+Required Entries:
+.TP
+.B \f[C]nodename\f[]
+Name of the node, this must be a unique Identifier across nodes within a
+project
+.RS
+.RE
+.TP
+.B \f[C]hostname\f[]
+Hostname of the node.
+This can be any IP Address or hostname to address the node.
+Since hostname is used to make SSH connections, it is possible to
+overload the value to include port number.
+(eg, hostname:port).
+.RS
+.RE
+.TP
+.B \f[C]username\f[]
+User name to connect to the node via SSH.
+.RS
+.RE
+.PP
+Optional Entries:
+.TP
+.B \f[C]description\f[]
+A description of the Node
+.RS
+.RE
+.TP
+.B \f[C]tags\f[]
+A literal with comma\-separated tag strings, or a Sequence of literals.
+Tags are used for filtering nodes and often represent server role,
+environment, class, or group.
+.RS
+.RE
+.TP
+.B \f[C]osFamily\f[]
+OS Family
+.RS
+.RE
+.TP
+.B \f[C]osArch\f[]
+OS Architecture
+.RS
+.RE
+.TP
+.B \f[C]osName\f[]
+OS Name
+.RS
+.RE
+.TP
+.B \f[C]osVersion\f[]
+OS Version
+.RS
+.RE
+.TP
+.B \f[C]editUrl\f[]
+URL to an external resource model service.
+.RS
+.RE
+.TP
+.B \f[C]remoteUrl\f[]
+URL to an external resource model editor service.
+.RS
+.RE
+.TP
+.B \f[I]Anything\f[]
+Specify any custom attributes about node using a string value.
+.RS
+.RE
+.IP \[bu] 2
+For more information about using the \f[C]editUrl\f[]/\f[C]remoteUrl\f[]
+see the Rundeck User
+Manual (../administration/managing-node-sources.html#resource-editor).
+.SS Examples
+.PP
+Here\[aq]s a node, Venkman.local, described with several of the required
+and optional attributes discussed above.
+.IP
+.nf
+\f[C]
+Venkman.local:
+\ \ description:\ Rundeck\ server\ node
+\ \ hostname:\ Venkman.local
+\ \ nodename:\ Venkman.local
+\ \ osArch:\ x86_64
+\ \ osFamily:\ unix
+\ \ osName:\ Mac\ OS\ X
+\ \ osVersion:\ 10.6.6
+\ \ tags:\ \[aq]\[aq]
+\ \ username:\ greg
+\f[]
+.fi
+.PP
+Tags are very useful for node filtering and can be used to describe the
+role, environment, group, or class to which a node belongs.
+The Homestar.local example below describes a node that plays the role of
+a redis server in the production environment.
+.IP
+.nf
+\f[C]
+Homestar.local:
+\ \ description:\ The\ production\ redis\ server.
+\ \ hostname:\ Homestar.local
+\ \ nodename:\ Homestar.local
+\ \ osArch:\ x86_64
+\ \ osFamily:\ unix
+\ \ osName:\ Linux
+\ \ tags:\ \[aq]redis_server,production\[aq]
+\ \ username:\ greg
+\f[]
+.fi
+.PP
+Here\[aq]s a node, bartholemew, that specifies some custom attributes
+(app\-port, https\-port):
+.IP
+.nf
+\f[C]
+bartholemew:
+\ \ description:\ Webapp\ node
+\ \ hostname:\ bartholemew
+\ \ nodename:\ bartholemew
+\ \ tags:\ \[aq]web,app\[aq]
+\ \ username:\ greg
+\ \ app\-port:\ 8080
+\ \ https\-port:\ 8443
+\f[]
+.fi
+.PP
+Here is the same two nodes but in the sequence style syntax:
+.IP
+.nf
+\f[C]
+\-\ Homestar.local:
+\ \ description:\ The\ production\ redis\ server.
+\ \ hostname:\ Homestar.local
+\ \ nodename:\ Homestar.local
+\ \ tags:\ \[aq]redis_server,production\[aq]
+\ \ username:\ greg
+\-\ bartholemew:
+\ \ description:\ Webapp\ node
+\ \ hostname:\ bartholemew
+\ \ nodename:\ bartholemew
+\ \ tags:\ \[aq]web,app\[aq]
+\ \ username:\ greg
+\ \ app\-port:\ 8080
+\ \ https\-port:\ 8443
+\f[]
+.fi
+.PP
+The Rundeck source code and all documentation may be downloaded from
+<https://github.com/rundeck/rundeck/>.
+.SH AUTHORS
+Greg Schueler.

@@ -1,0 +1,1113 @@
+.TH "JOB\-YAML" "" "February 25, 2011" "" ""
+.SH NAME
+.PP
+job\-yaml\-v13 \- The \[aq]job\[aq] YAML file declares job entries for
+Rundeck.
+.SS Loading and unloading
+.PP
+This file can be batch loaded via
+rd (https://rundeck.github.io/rundeck-cli/) jobs load command:
+.IP
+.nf
+\f[C]
+rd\ jobs\ load\ \-p\ project\ \-\-file\ /path/to/jobs.yaml\ \-F\ yaml
+\f[]
+.fi
+.PP
+Rundeck job definitions can be dumped and saved to a file via rd jobs
+list command:
+.IP
+.nf
+\f[C]
+rd\ jobs\ list\ \-p\ project\ \-\-file\ /tmp/jobs.yaml\ \-F\ yaml
+\f[]
+.fi
+.SS Structure
+.PP
+The YAML document can contain multiple Job definitions, in a sequence:
+.IP
+.nf
+\f[C]
+\-\ #\ job\ 1
+\ \ name:\ ...
+\-\ #\ job\ 2
+\ \ name:\ ...
+\f[]
+.fi
+.PP
+Each Job definition is a Map consisting of some required and some
+optional entries, as listed below.
+.SS Job Map Contents
+.PP
+Each Job definition requires these values:
+.TP
+.B \f[C]name\f[]
+the job name (required)
+.RS
+.RE
+.TP
+.B \f[C]description\f[]
+the job description (can be blank).
+The firstline is the "simple description".
+Remaining lines are the "extended description".
+.RS
+.RE
+.TP
+.B \f[C]loglevel\f[]
+the loglevel to use for the job, the value must be one of:
+.RS
+.IP \[bu] 2
+\f[C]DEBUG\f[]
+.IP \[bu] 2
+\f[C]VERBOSE\f[]
+.IP \[bu] 2
+\f[C]INFO\f[]
+.IP \[bu] 2
+\f[C]WARN\f[]
+.IP \[bu] 2
+\f[C]ERROR\f[]
+.RE
+.PP
+If the description contains more than one line of text, then the first
+line is used as the "short description" of the job, and rendered exactly
+as text.
+The remaining lines are the "extended description", rendered using
+Markdown format as HTML in the Rundeck GUI.
+Markdown can also embed HTML directly if you like.
+See Wikipedia \-
+Markdown (http://en.wikipedia.org/wiki/Markdown#Example).
+.PP
+The HTML is sanitized to remove disallowed tags before rendering to the
+browser (such as \f[C]<script>\f[], etc.).
+You can disable all extended description HTML rendering via a
+configuration flag.
+See GUI Customization (../administration/gui-customization.html).
+.TP
+.B \f[C]sequence\f[] (#sequence)
+The workflow sequence definition
+.RS
+.RE
+.PP
+A minimal job definition example:
+.IP
+.nf
+\f[C]
+\-\ name:\ job\ name
+\ \ description:\ \[aq]\[aq]
+\ \ loglevel:\ INFO
+\ \ sequence:\ 
+\ \ \ \ commands:
+\ \ \ \ \ \ \-\ exec:\ a\ command
+\f[]
+.fi
+.PP
+Extended description using yaml \[aq]literal\[aq] scalar string format
+(beginning with a \f[C]|\f[]).
+Make sure each line is indented to the correct level.
+.IP
+.nf
+\f[C]
+\-\ name:\ job\ name
+\ \ description:\ |
+\ \ \ \ Performs\ a\ service
+\ \ \ \ 
+\ \ \ \ This\ is\ <b>html</b>
+\ \ \ \ <ul><li>bulleted\ list</li></ul>
+\ \ \ \ 
+\ \ \ \ <a\ href="/">Top</a>
+\ \ \ \ 
+\ \ \ \ 1.\ this\ is\ a\ markdown\ numbered\ list
+\ \ \ \ 2.\ second\ item
+\ \ \ \ 
+\ \ \ \ [a\ link](http://example.com)
+\ \ loglevel:\ INFO
+\ \ sequence:\ 
+\ \ \ \ commands:
+\ \ \ \ \ \ \-\ exec:\ a\ command
+\f[]
+.fi
+.PP
+In addition, these optional entries can be present:
+.TP
+.B \f[C]uuid\f[]
+Unique UUID
+.RS
+.RE
+.TP
+.B \f[C]group\f[]
+Job group name
+.RS
+.RE
+.TP
+.B \f[C]multipleExecutions\f[]
+\[aq]true/false\[aq]: if true, the job can have more than one execution
+at once.
+.RS
+.RE
+.TP
+.B \f[C]timeout\f[]
+a maximum runtime before the job will be stopped.
+.RS
+.IP \[bu] 2
+\f[C]120\f[] \- indicates 120 seconds
+.IP \[bu] 2
+\f[C]6h\ 30m\f[] indicates 6 hours and 30 minutes
+.IP \[bu] 2
+\f[C]${option.timeout}\f[] reference to a job option value
+.RE
+.TP
+.B \f[C]retry\f[]
+Number of times to retry the job if it fails or times out.
+Allowed values:
+.RS
+.IP \[bu] 2
+An integer number indicating the maximum retries
+.IP \[bu] 2
+\f[C]${option.retry}\f[] reference to a job option value
+.RE
+.TP
+.B \f[C]loglimit\f[]
+An optional logging limit.
+.RS
+.RE
+.PP
+(See Jobs \- Log Limit (../manual/jobs.html#log-limit)).
+Allowed values:
+.IP
+.nf
+\f[C]
+*\ `###`\ If\ you\ specify\ a\ number,\ that\ is\ treated\ as\ the\ "Maximum\ total\ number\ of\ log\ lines"
+*\ `###/node`\ If\ you\ specify\ a\ number\ followed\ by\ `/node`,\ the\ number\ is\ treated\ as\ the\ "Maximum\ number\ of\ log\ lines\ for\ a\ single\ node"
+*\ `###[GMK]B`\ If\ you\ specify\ a\ number\ followed\ by\ a\ filesize\ suffix,\ that\ is\ treated\ as\ the\ "total\ log\ file\ size".\ \ The\ file\ size\ suffixes\ allowed\ are\ "GB"\ (gigabyte),\ "MB"\ (megabyte),\ "KB"\ (kilobyte)\ and\ "B"\ (byte).
+\f[]
+.fi
+.TP
+.B \f[C]loglimitAction\f[]
+The action to perform if the \f[C]loglimit\f[] value is exceeded.
+If \f[C]loglimit\f[] is sepcified, but no \f[C]loglimitAction\f[] is
+set, it will default to a value of \f[C]halt\f[].
+Allowed values:
+.RS
+.IP \[bu] 2
+\f[C]halt\f[] \- halt and fail the job (default)
+.IP \[bu] 2
+\f[C]truncate\f[] \- do not halt the job, and truncate all further
+output
+.RE
+.TP
+.B \f[C]loglimitStatus\f[]
+The status for the Job when halted.
+If no \f[C]loglimitStatus\f[] is set, it will default to a value of
+\f[C]failed\f[].
+Allowed values:
+.RS
+.IP \[bu] 2
+\f[C]failed\f[]
+.IP \[bu] 2
+\f[C]aborted\f[]
+.IP \[bu] 2
+(any string)
+.RE
+.TP
+.B \f[C]options\f[] (#options)
+Set of Options for the Job
+.RS
+.RE
+.TP
+.B \f[C]schedule\f[] (#schedule)
+Job schedule
+.RS
+.RE
+.TP
+.B \f[C]nodefilters\f[] (#nodefilters)
+Node filter definition
+.RS
+.RE
+.TP
+.B \f[C]notification\f[] (#notification)
+Job result notifications
+.RS
+.RE
+.PP
+\f[I]Note:\f[] The UUID can be set manually (if you are writing the job
+definition from scratch), or will be assigned at job creation time by
+the Rundeck server using a random UUID.
+This string should be as unique as possible if you set it manually.
+.PP
+This identifier is used to uniquely identify jobs when ported between
+Rundeck instances.
+.SS Sequence
+.PP
+This defines the Workflow options and execution sequence.
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ sequence:
+\ \ \ \ keepgoing:\ true
+\ \ \ \ strategy:\ node\-first
+\ \ \ \ commands:\ 
+\ \ \ \ \-\ exec:\ ...
+\ \ \ \ \-\ script:\ ...
+\ \ \ \ \ \ args:\ ...
+\ \ \ \ \-\ scriptfile:\ ...
+\ \ \ \ \ \ args:
+\ \ \ \ \-\ scripturl:\ ...
+\ \ \ \ \ \ args:
+\ \ \ \ \-\ jobref:
+\ \ \ \ \ \ \ \ name:\ jobname
+\ \ \ \ \ \ \ \ group:\ group
+\ \ \ \ \ \ \ \ args:\ args
+\ \ \ \ \-\ nodeStep:\ true/false
+\ \ \ \ \ \ type:\ plugin\-type
+\ \ \ \ \ \ configuration:\ 
+\ \ \ \ \ \ \ \ key:\ value
+\ \ \ \ \ \ \ \ another:\ value
+\f[]
+.fi
+.PP
+The sequence has these required entries:
+.TP
+.B \f[C]keepgoing\f[]
+"true/false" \- whether the sequence should keep going if an error
+occurs
+.RS
+.RE
+.TP
+.B \f[C]strategy\f[]
+"node\-first" or "step\-first".
+Determines the strategy for executing the sequence across a set of
+nodes.
+See the Rundeck User
+Manual (../manual/jobs.html#workflow-control-settings) for more info.
+.RS
+.RE
+.TP
+.B \f[C]commands\f[]
+This is a Sequence of: * One or more Command Definitions (#command)
+.RS
+.RE
+.SS Command
+.PP
+Each command in the Sequence (#sequence) can be of these different
+types:
+.IP \[bu] 2
+Simple command execution entry (#simple-command-entry)
+.IP \[bu] 2
+Script execution entry (#script-execution-entry)
+.IP \[bu] 2
+Script file execution entry (#script-file-execution-entry)
+.IP \[bu] 2
+Job Reference entry (#job-reference-entry)
+.IP \[bu] 2
+Plugin step entry (#plugin-step-entry)
+.PP
+Each command can also embed an Error Handler (#error-handler).
+.PP
+Each command can have a description (#description).
+.SS Error Handler
+.PP
+An Error Handler defines a secondary action in case the first one fails.
+An Error Handler is a map keyed with the name:
+.PP
+\f[C]errorhandler\f[]
+.PP
+The Error Handler contents can be exactly the same as a
+Command (#command), except it cannot contain another Error Handler.
+The contents are defined by one of these types:
+.IP \[bu] 2
+Simple command execution entry (#simple-command-entry)
+.IP \[bu] 2
+Script execution entry (#script-execution-entry)
+.IP \[bu] 2
+Script file execution entry (#script-file-execution-entry)
+.IP \[bu] 2
+Job Reference entry (#job-reference-entry)
+.PP
+The errorhandler has this additional optional entry:
+.TP
+.B \f[C]keepgoingOnSuccess\f[]
+"true/false" \- If true, and the error handler succeeds, the workflow
+sequence will continue even if the workflow \f[C]keepgoing\f[] is false.
+.RS
+.RE
+.SS description
+.PP
+Defines a description for a step.
+.TP
+.B \f[C]description\f[]
+Text to describe this step (optional).
+.RS
+.RE
+.SS Simple Command Entry
+.PP
+This Command (#command) consists of a single entry:
+.TP
+.B \f[C]exec\f[]
+the command to execute
+.RS
+.RE
+.SS Script Execution Entry
+.PP
+This Command (#command) executes the script content specified.
+.TP
+.B \f[C]script\f[]
+The script content.
+It is useful to use the YAML "literal" scalar syntax shown below
+.RS
+.RE
+.TP
+.B \f[C]args\f[]
+Optional string defining arguments to pass to the script.
+.RS
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ \ \-\ script:\ |\-
+\ \ \ \ \ \ #!/bin/bash
+
+\ \ \ \ \ \ echo\ this\ is\ a\ script
+\ \ \ \ \ \ echo\ this\ is\ option\ value:\ \@option.test\@
+\ \ \ \ args:\ arguments\ passed\ to\ the\ script
+\f[]
+.fi
+.SS Script File Execution Entry
+.PP
+This Command (#command) executes a script file stored on the server.
+.TP
+.B \f[C]scriptfile\f[]
+path to the script file
+.RS
+.RE
+.TP
+.B \f[C]args\f[]
+optional arguments to the script
+.RS
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ \-\ scriptfile:\ /path/to/script
+\ \ \ \ args:\ arguments\ to\ script
+\f[]
+.fi
+.SS Script URL Execution Entry
+.PP
+This Command (#command) downloads a script file from a URL and executes
+it.
+.TP
+.B \f[C]scripturl\f[]
+URL to the script file
+.RS
+.RE
+.TP
+.B \f[C]args\f[]
+optional arguments to the script
+.RS
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ \-\ scripturl:\ http://example.com/path/to/script
+\ \ \ \ args:\ arguments\ to\ script
+\f[]
+.fi
+.SS Script Interpreter
+.PP
+For \f[C]script\f[], \f[C]scriptfile\f[] and \f[C]scripturl\f[], you can
+optionally declare an "interpreter" string to use to execute the script,
+and whether the arguments are quoted or not.
+.TP
+.B \f[C]scriptInterpreter\f[]
+Optional string to declare an interpreter line for the script.
+The script and args will be passed to this command, rather than executed
+directly.
+.RS
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ \ \-\ script:\ |\-
+\ \ \ \ \ \ #!/bin/bash
+
+\ \ \ \ \ \ echo\ this\ is\ a\ script
+\ \ \ \ \ \ echo\ this\ is\ option\ value:\ \@option.test\@
+\ \ \ \ args:\ arguments\ passed\ to\ the\ script
+\ \ \ \ scriptInterpreter:\ interpreter\ \-flag
+\f[]
+.fi
+.PP
+This script will then be executed as:
+.IP
+.nf
+\f[C]
+interpreter\ \-flag\ script.sh\ arguments\ ...
+\f[]
+.fi
+.TP
+.B \f[C]interpreterArgsQuoted\f[]
+Optional boolean, indicating whether the script and arguments should be
+quoted when passed to the interpreter.
+.RS
+.RE
+.PP
+If \f[C]interpreterArgsQuoted\f[] is \f[C]true\f[], then the script will
+then be executed as:
+.IP
+.nf
+\f[C]
+interpreter\ \-flag\ \[aq]script.sh\ arguments\ ...\[aq]
+\f[]
+.fi
+.SS Job Reference Entry
+.PP
+This Command (#command) executes another Rundeck Job.
+.TP
+.B \f[C]jobref\f[]
+map consisting of these entries:
+.RS
+.TP
+.B \f[C]name\f[]
+Name of the Job
+.RS
+.RE
+.TP
+.B \f[C]group\f[]
+Group of the Job (optional)
+.RS
+.RE
+.TP
+.B \f[C]args\f[]
+Arguments to pass to the job when executed
+.RS
+.RE
+.TP
+.B \f[C]nodeStep\f[]
+Execute as a Node Step (optional).
+\f[C]true/false\f[].
+.RS
+.RE
+.TP
+.B nodefilters (#job-reference-nodefilters)
+Overriding node filters and dispatch options.
+.RS
+.RE
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ \-\ jobref:
+\ \ \ \ \ \ group:\ test
+\ \ \ \ \ \ name:\ simple\ job\ test
+\ \ \ \ \ \ args:\ args\ for\ the\ job
+\f[]
+.fi
+.PP
+If \f[C]nodeStep\f[] is set to "true", then the Job Reference step will
+operate as a \f[I]Node Step\f[] instead of the default.
+As a \f[I]Node Step\f[] it will execute once for each matched node in
+the containing Job workflow, and can use node attribute variable
+expansion in the arguments to the job reference.
+.SS Job Reference Nodefilters
+.PP
+A \f[C]nodefilters\f[] map entry specifies the Nodes to use for the
+referenced job, and the node\-dispatch options.
+Contains the following entries:
+.TP
+.B \f[C]dispatch\f[]
+a Map containing:
+.RS
+.TP
+.B \f[C]keepgoing\f[]
+"true/false" \- whether to keepgoing on remaining nodes if a node fails
+.RS
+.RE
+.TP
+.B \f[C]threadcount\f[]
+Number of threads to use for parallel dispatch (default "1")
+.RS
+.RE
+.TP
+.B \f[C]rankAttribute\f[]
+Name of the Node attribute to use for ordering the sequence of nodes
+(default is the node name)
+.RS
+.RE
+.TP
+.B \f[C]rankOrder\f[]
+Order direction for node ranking.
+Either "ascending" or "descending" (default "ascending")
+.RS
+.RE
+.RE
+.PP
+The \f[C]nodefilters\f[] should contain a \f[C]filter\f[] entry.
+The value is a string defining a node filter.
+See User Guide \- Node Filters (../manual/node-filters.html).
+.TP
+.B \f[C]filter\f[]
+A node filter string
+.RS
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\-\ jobref:
+\ \ \ name:\ jobname
+\ \ \ group:\ group
+\ \ \ args:\ args
+\ \ \ nodefilters:
+\ \ \ \ \ \ dispatch:
+\ \ \ \ \ \ \ \ threadcount:\ 1
+\ \ \ \ \ \ \ \ keepgoing:\ false
+\ \ \ \ \ \ \ \ rankAttribute:\ rank
+\ \ \ \ \ \ \ \ rankOrder:\ descending
+\ \ \ \ \ \ filter:\ \[aq]tags:\ web\ name:\ web\-.*\ !os\-family:\ windows\[aq]
+\f[]
+.fi
+.SS Plugin Step Entry
+.PP
+This Command (#command) executes a plugin.
+There are two types of step plugins: Node step, and Workflow step.
+.TP
+.B \f[C]nodeStep\f[]
+boolean: true indicates it is a Node step plugin, false indicates a
+Workflow step plugin.
+.RS
+.RE
+.TP
+.B \f[C]type\f[]
+The plugin provider type identifier.
+.RS
+.RE
+.TP
+.B \f[C]configuration\f[]
+map consisting of a single level of configuration entries for the
+plugin.
+Refer to the plugin documentation for appropriate configuration keys and
+values.
+.RS
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ \-\ nodeStep:\ false
+\ \ \ \ type:\ jenkins\-build
+\ \ \ \ configuration:
+\ \ \ \ \ \ job:\ "${option.job}"
+\f[]
+.fi
+.SS Options
+.PP
+Options for a job can be specified with a list of Maps.
+Each map contains a \f[C]name\f[] key with the name of the option, and
+the content is a map defining the Option (#option).
+.IP
+.nf
+\f[C]
+\ \ options:
+\ \ \-\ {definition..}
+\ \ \-\ {definition..}
+\f[]
+.fi
+.PP
+Note: for backwards compatibility, a Map format is also accepted on
+import:
+.IP
+.nf
+\f[C]
+\ \ options:
+\ \ \ \ optname1:
+\ \ \ \ \ \ {definition..}
+\ \ \ \ optname2:
+\ \ \ \ \ \ {definition..}
+\f[]
+.fi
+.SS Option
+.PP
+An option definition requires at least a \f[C]name\f[] key to identify
+it:
+.IP
+.nf
+\f[C]
+\ \ options:
+\ \ \-\ name:\ myoption
+\f[]
+.fi
+.PP
+Optional map entries are:
+.TP
+.B \f[C]description\f[]
+description of the option, will be rendered as Markdown
+.RS
+.RE
+.TP
+.B \f[C]value\f[]
+a default value for the option
+.RS
+.RE
+.TP
+.B \f[C]values\f[]
+A set of possible values for the option.
+This must be a YAML Sequence of strings.
+.RS
+.RE
+.TP
+.B \f[C]required\f[]
+"true/false" \- whether the option is required or not
+.RS
+.RE
+.TP
+.B \f[C]enforced\f[]
+"true/false" \- whether the option value must be one of the specified
+possible values
+.RS
+.RE
+.TP
+.B \f[C]regex\f[]
+A regular expression defining what option values are acceptable
+.RS
+.RE
+.TP
+.B \f[C]valuesUrl\f[]
+A URL to an endpoint that will return a JSON\-formatted set of values
+for the option.
+.RS
+.RE
+.TP
+.B \f[C]multivalued\f[]
+"true/false" \- whether the option supports multiple input values
+.RS
+.RE
+.TP
+.B \f[C]delimiter\f[]
+A string used to conjoin multiple input values.
+(Required if \f[C]multivalued\f[] is "true")
+.RS
+.RE
+.TP
+.B \f[C]multivalueAllSelected\f[]
+"true/false" \- whether all values should be selected by default
+.RS
+.RE
+.TP
+.B \f[C]secure\f[]
+"true/false" \- whether the option is a secure input option.
+Not compatible with "multivalued"
+.RS
+.RE
+.TP
+.B \f[C]valueExposed\f[]
+"true/false" \- whether a secure input option value is exposed to
+scripts or not.
+\f[C]false\f[] means the option will be used only as a Secure Remote
+Authentication option.
+default: \f[C]false\f[].
+.RS
+.RE
+.TP
+.B \f[C]storagePath\f[]
+for a secure option, a storage path to password value to use as default
+.RS
+.RE
+.TP
+.B \f[C]isDate\f[]
+"true/false" \- the option should display as a date/time input field
+.RS
+.RE
+.TP
+.B \f[C]dateFormat\f[]
+The date/time format to use in the UI.
+Using the momentjs
+format (http://momentjs.com/docs/#/displaying/format/).
+.RS
+.RE
+.TP
+.B \f[C]sortIndex\f[] (deprecated)
+\f[I]integer\f[] \- A number indicating the order this option should
+appear in the GUI.
+If specified this option will be arranged in order with other options
+with a \f[C]sortIndex\f[] value.
+If the Options (#options) are defined in a list, the order specified
+will be preserved.
+.RS
+.RE
+.PP
+The \f[C]description\f[] for an Option will be rendered with Markdown in
+the GUI.
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ test:
+\ \ \ \ required:\ true
+\ \ \ \ description:\ a\ test\ option
+\ \ \ \ value:\ dvalue
+\ \ \ \ regex:\ ^[abcd]value$
+\ \ \ \ values:
+\ \ \ \ \-\ avalue
+\ \ \ \ \-\ bvalue
+\ \ \ \ \-\ cvalue
+\ \ \ \ multivalued:\ true
+\ \ \ \ delimiter:\ \[aq],\[aq]
+\f[]
+.fi
+.PP
+Example using multiple lines for the description:
+.IP
+.nf
+\f[C]
+\ \ test:
+\ \ \ \ required:\ true
+\ \ \ \ description:\ |
+\ \ \ \ \ \ example\ option\ description
+
+\ \ \ \ \ \ *\ this\ content\ will\ be\ rendered
+\ \ \ \ \ \ *\ as\ markdown
+\ \ \ \ value:\ dvalue
+\ \ \ \ regex:\ ^[abcd]value$
+\ \ \ \ values:
+\ \ \ \ \-\ avalue
+\ \ \ \ \-\ bvalue
+\ \ \ \ \-\ cvalue
+\ \ \ \ multivalued:\ true
+\ \ \ \ delimiter:\ \[aq],\[aq]
+\f[]
+.fi
+.SS valuesUrl JSON
+.PP
+The data returned from the valuesUrl can be formatted as a list of
+values:
+.IP
+.nf
+\f[C]
+["x\ value","y\ value"]
+\f[]
+.fi
+.PP
+or as Name\-value list:
+.IP
+.nf
+\f[C]
+[
+\ \ {name:"X\ Label",\ value:"x\ value"},
+\ \ {name:"Y\ Label",\ value:"y\ value"},
+\ \ {name:"A\ Label",\ value:"a\ value"}
+]\ 
+\f[]
+.fi
+.IP \[bu] 2
+See the Jobs Guide (../manual/jobs.html#remote-option-values) for more
+info.
+.SS Schedule
+.PP
+Define a schedule for repeated execution of the Job.
+The schedule can be defined as a Crontab formatted string, or as
+individual components.
+The individual components support Crontab syntax.
+.IP \[bu] 2
+\f[C]crontab\f[]: The crontab string, e.g.
+\f[C]"0\ 30\ */6\ ?\ Jan\ Mon\ *"\f[]
+.PP
+Or use a structure of explicit components.
+All of these are optional, but likely you want to change them:
+.TP
+.B \f[C]time\f[]
+a map containing:
+.RS
+.TP
+.B \f[C]seconds\f[]
+seconds value (default: "0")
+.RS
+.RE
+.TP
+.B \f[C]minute\f[]
+minutes value (default: "0")
+.RS
+.RE
+.TP
+.B \f[C]hour\f[]
+hour value (default: "0")
+.RS
+.RE
+.RE
+.TP
+.B \f[C]month\f[]
+Month value (default: "*")
+.RS
+.RE
+.TP
+.B \f[C]year\f[]
+Year value (default "*")
+.RS
+.RE
+.PP
+\f[C]dayofmonth\f[]
+.IP
+.nf
+\f[C]
+`day`
+
+:\ \ \ \ day\ of\ month\ value.\ (mutually\ exclusive\ with\ `weekday`)\ Numerical\ values\ start\ with\ 1.
+\f[]
+.fi
+.TP
+.B \f[C]weekday\f[]
+Map containing:
+.RS
+.TP
+.B \f[C]day\f[]
+Weekday value.
+(mutually exclusive with \f[C]dayofmonth\f[]) (default: "*") Numerical
+values are 1\-7 for Sunday\-Saturday.
+.RS
+.RE
+.RE
+.PP
+Example using crontab string:
+.IP
+.nf
+\f[C]
+\ \ \ \ schedule:
+\ \ \ \ \ \ crontab:\ \[aq]0\ 30\ */6\ ?\ Jan\ Mon\ *\[aq]
+\f[]
+.fi
+.PP
+Example using structure:
+.IP
+.nf
+\f[C]
+\ \ \ \ schedule:
+\ \ \ \ \ \ time:
+\ \ \ \ \ \ \ \ hour:\ \[aq]05\[aq]
+\ \ \ \ \ \ \ \ minute:\ \[aq]01\[aq]
+\ \ \ \ \ \ \ \ seconds:\ \[aq]0\[aq]
+\ \ \ \ \ \ month:\ APR,MAR,MAY
+\ \ \ \ \ \ year:\ \[aq]*\[aq]
+\ \ \ \ \ \ weekday:
+\ \ \ \ \ \ \ \ day:\ FRI,MON,TUE
+\f[]
+.fi
+.SS Nodefilters
+.PP
+Specifies the Nodes to use for the job, and the node\-dispatch options.
+Contains the following entries:
+.TP
+.B \f[C]dispatch\f[]
+a Map containing:
+.RS
+.TP
+.B \f[C]keepgoing\f[]
+"true/false" \- whether to keepgoing on remaining nodes if a node fails
+.RS
+.RE
+.TP
+.B \f[C]excludePrecedence\f[]
+"true/false" (default "true") \- determines precedence for filters
+.RS
+.RE
+.TP
+.B \f[C]threadcount\f[]
+Number of threads to use for parallel dispatch (default "1")
+.RS
+.RE
+.TP
+.B \f[C]rankAttribute\f[]
+Name of the Node attribute to use for ordering the sequence of nodes
+(default is the node name)
+.RS
+.RE
+.TP
+.B \f[C]rankOrder\f[]
+Order direction for node ranking.
+Either "ascending" or "descending" (default "ascending")
+.RS
+.RE
+.RE
+.PP
+The \f[C]nodefilters\f[] should contain a \f[C]filter\f[] entry.
+The value is a string defining a node filter.
+See User Guide \- Node Filters (../manual/node-filters.html).
+.TP
+.B \f[C]filter\f[]
+A node filter string
+.RS
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ nodefilters:
+\ \ \ \ dispatch:
+\ \ \ \ \ \ threadcount:\ 1
+\ \ \ \ \ \ keepgoing:\ false
+\ \ \ \ \ \ excludePrecedence:\ true
+\ \ \ \ \ \ rankAttribute:\ rank
+\ \ \ \ \ \ rankOrder:\ descending
+\ \ \ \ filter:\ \[aq]tags:\ web\ name:\ web\-.*\ !os\-family:\ windows\[aq]
+\f[]
+.fi
+.PP
+\f[B]Note:\f[] The \f[C]include\f[] and \f[C]exclude\f[] map entries are
+deprecated and will be removed in a later version of Rundeck.
+.PP
+The \f[C]nodefilters\f[] must also contain ONE of \f[C]include\f[] or
+\f[C]exclude\f[] filter specifiers.
+.TP
+.B \f[C]include\f[]/\f[C]exclude\f[]
+A Map containing filter entries:
+.RS
+.TP
+.B \f[C]hostname\f[]
+Hostname filter
+.RS
+.RE
+.TP
+.B \f[C]name\f[]
+Node name filter
+.RS
+.RE
+.TP
+.B \f[C]tags\f[]
+Tags filter.
+Supports boolean operators AND ("+") and OR (",").
+.RS
+.RE
+.TP
+.B \f[C]os\-name\f[]
+OS name filter
+.RS
+.RE
+.TP
+.B \f[C]os\-family\f[]
+OS Family filter
+.RS
+.RE
+.TP
+.B \f[C]os\-arch\f[]
+OS Arch filter
+.RS
+.RE
+.TP
+.B \f[C]os\-version\f[]
+OS Version filter
+.RS
+.RE
+.RE
+.PP
+Deprecated Example:
+.IP
+.nf
+\f[C]
+\ \ nodefilters:
+\ \ \ \ dispatch:
+\ \ \ \ \ \ threadcount:\ 1
+\ \ \ \ \ \ keepgoing:\ false
+\ \ \ \ \ \ excludePrecedence:\ true
+\ \ \ \ \ \ rankAttribute:\ rank
+\ \ \ \ \ \ rankOrder:\ descending
+\ \ \ \ include:
+\ \ \ \ \ \ tags:\ web
+\ \ \ \ \ \ name:\ web\-.*
+\ \ \ \ exclude:
+\ \ \ \ \ \ os\-family:\ windows
+\f[]
+.fi
+.SS Notification
+.PP
+Defines a notification for the job.
+You can include any of \f[C]onsuccess\f[], \f[C]onfailure\f[] or
+\f[C]onstart\f[] notifications.
+Each type of notification can define any of the built in notifications,
+or define plugin notifications.
+.TP
+.B \f[C]onsuccess\f[]/\f[C]onfailure\f[]/\f[C]onstart\f[]
+A Map containing either or both of:
+.RS
+.TP
+.B \f[C]recipients\f[]
+A comma\-separated list of Email addresses
+.RS
+.RE
+.TP
+.B \f[C]urls\f[]
+A comma\-separated list of URLs to use as webhooks
+.RS
+.RE
+.TP
+.B \f[C]plugin\f[] (#plugin)
+Defines a plugin notification.
+.RS
+.RE
+.RE
+.PP
+Example:
+.IP
+.nf
+\f[C]
+\ \ notification:
+\ \ \ \ onfailure:
+\ \ \ \ \ \ recipients:\ tom\@example.com,shirley\@example.com
+\ \ \ \ onsuccess:
+\ \ \ \ \ \ urls:\ \[aq]http://server/callback?id=${execution.id}&status=${execution.status}&trigger=${notification.trigger}\[aq]
+\ \ \ \ \ \ plugin:
+\ \ \ \ \ \ \ \ type:\ myplugin
+\ \ \ \ \ \ \ \ configuration:
+\ \ \ \ \ \ \ \ \ \ somekey:\ somevalue
+\ \ \ \ onstart:
+\ \ \ \ \ \ \-\ \ plugin:
+\ \ \ \ \ \ \ \ \ \ type:\ myplugin
+\ \ \ \ \ \ \ \ \ \ configuration:
+\ \ \ \ \ \ \ \ \ \ \ \ somekey:\ somevalue
+\ \ \ \ \ \ \-\ \ plugin:
+\ \ \ \ \ \ \ \ \ \ type:\ otherplugin
+\ \ \ \ \ \ \ \ \ \ configuration:
+\ \ \ \ \ \ \ \ \ \ \ \ a:\ b
+\f[]
+.fi
+.IP \[bu] 2
+For more information about the Webhook mechanism used, see the chapter
+Integration \- Webhooks (../manual/jobs.html#webhooks).
+.SS plugin
+.PP
+Defines a plugin notification section, can contain a single Map, or a
+Sequence of Maps.
+Each such map must have these contents:
+.TP
+.B \f[C]type\f[]
+The type identifier of the plugin
+.RS
+.RE
+.TP
+.B \f[C]configuration\f[]
+A Map containing any custom configuration key/values for the plugin.
+.RS
+.RE
+.SH SEE ALSO
+.PP
+rd jobs (../man1/rd%20jobs.html)
+.PP
+<http://yaml.org/>
+.PP
+The Rundeck source code and all documentation may be downloaded from
+<https://github.com/rundeck/rundeck/>.
+.SH AUTHORS
+Greg Schueler.
